@@ -8,10 +8,10 @@ const config: HardhatUserConfig = {
   solidity: {
     profiles: {
       default: {
-        version: "0.8.28",
+        version: "0.8.30",
       },
       production: {
-        version: "0.8.28",
+        version: "0.8.30",
         settings: {
           optimizer: {
             enabled: true,
@@ -22,6 +22,11 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
+    hardhat: {
+      type: "edr-simulated",
+      chainType: "l1",
+      hardfork: "prague", // Enable Prague fork for BLS12381 precompiles
+    },
     hardhatMainnet: {
       type: "edr-simulated",
       chainType: "l1",
