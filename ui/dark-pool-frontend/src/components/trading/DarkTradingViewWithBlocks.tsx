@@ -30,7 +30,6 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [amount, setAmount] = useState('');
   const [price, setPrice] = useState('');
-  const [showBlockView, setShowBlockView] = useState(false);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
 
   const { state, visualizations, addOrder } = useBlockEngine();
@@ -101,22 +100,9 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
     <div className={cn('space-y-6', className)}>
       {/* Epoch Progress Indicator */}
       <div className="bg-gray-900 rounded-xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            <CubeIcon className="h-5 w-5 text-blue-400" />
-            <span className="text-sm font-medium text-gray-300">Current Epoch Progress</span>
-          </div>
-          <button
-            onClick={() => setShowBlockView(!showBlockView)}
-            className={cn(
-              'px-3 py-1 text-xs font-medium rounded transition-colors',
-              showBlockView
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            )}
-          >
-            {showBlockView ? 'Hide Blocks' : 'Show Blocks'}
-          </button>
+        <div className="flex items-center space-x-2 mb-3">
+          <CubeIcon className="h-5 w-5 text-blue-400" />
+          <span className="text-sm font-medium text-gray-300">Current Epoch Progress</span>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -384,10 +370,6 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
         </div>
       )}
 
-      {/* Block Visualization */}
-      {showBlockView && (
-        <BlockChainVisualization visualizations={visualizations} />
-      )}
     </div>
   );
 };

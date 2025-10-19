@@ -84,7 +84,7 @@ export function useBlockEngineWithDemo() {
         totalEpochs: 0,
         totalOrders: 0,
         totalMatched: 0,
-        matchRate: 0
+        matchRate: '0'
       };
     }
 

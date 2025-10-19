@@ -7,3 +7,4 @@ export { PrivateOrderBlotter } from './PrivateOrderBlotter';
 export { DarkTradingViewWithBlocks } from './DarkTradingViewWithBlocks';
 export { BlockChainVisualization, EpochComponent } from './BlockVisualization';
 export { DemoStats } from './DemoStats';
+export { SimpleBlockVisualization } from './SimpleBlockVisualization';
