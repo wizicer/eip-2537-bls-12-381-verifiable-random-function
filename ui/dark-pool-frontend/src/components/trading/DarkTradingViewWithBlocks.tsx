@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowTrendingUpIcon, ArrowTrendingDownIcon, EyeIcon, EyeSlashIcon, CubeIcon } from '@heroicons/react/24/outline';
-import { BlurredBalance, RangeDisplay } from '../privacy/index.js';
-import { ObfuscationUtils, RangeUtils } from '../../utils/index.js';
-import { cn } from '../../utils/cn.js';
-import { useBlockEngine, useEpochProgress } from '../../hooks/useBlockEngine.js';
-import { BlockChainVisualization } from './BlockVisualization.js';
-import { Order } from '../../types/block.js';
+import { BlurredBalance, RangeDisplay } from '../privacy/index';
+import { ObfuscationUtils, RangeUtils } from '../../utils/index';
+import { cn } from '../../utils/cn';
+import { useBlockEngine, useEpochProgress } from '../../hooks/useBlockEngine';
+import { BlockChainVisualization } from './BlockVisualization';
+import type { Order } from '../../types/block';
 
 interface MarketData {
   symbol: string;

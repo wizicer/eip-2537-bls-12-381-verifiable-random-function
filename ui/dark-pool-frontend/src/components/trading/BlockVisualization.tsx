@@ -9,12 +9,12 @@ import {
   EyeIcon,
   EyeSlashIcon
 } from '@heroicons/react/24/outline';
-import { EpochVisualization, BlockVisualization } from '../../types/block.js';
-import { cn } from '../../utils/cn.js';
-import { ObfuscationUtils } from '../../utils/index.js';
+import type { EpochVisualization, BlockVisualization as BlockVisualizationType } from '../../types/block';
+import { cn } from '../../utils/cn';
+import { ObfuscationUtils } from '../../utils/index';
 
 interface BlockVisualizationProps {
-  visualization: BlockVisualization;
+  visualization: BlockVisualizationType;
   showDetails?: boolean;
   onToggleDetails?: () => void;
 }

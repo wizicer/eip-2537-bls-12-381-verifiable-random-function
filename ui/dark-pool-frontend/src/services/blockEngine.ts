@@ -1,4 +1,4 @@
-import {
+import type {
   Block,
   Epoch,
   Order,
@@ -6,8 +6,9 @@ import {
   BlockMatchingConfig,
   BlockVisualization,
   EpochVisualization
-} from '../types/block.js';
-import { ObfuscationUtils, DelayUtils } from '../utils/index.js';
+} from '../types/block';
+import { ObfuscationUtils } from '../utils/obfuscation';
+import { DelayUtils } from '../utils/delay';
 
 export class BlockEngine {
   private state: MatchingEngineState;

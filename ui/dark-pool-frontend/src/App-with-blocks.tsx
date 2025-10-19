@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { DarkTradingViewWithBlocks, BlockChainVisualization } from './components/trading/index.js';
-import { useBlockEngine } from './hooks/useBlockEngine.js';
+import { DarkTradingViewWithBlocks, BlockChainVisualization, DemoStats } from './components/trading/index';
+import { useBlockEngineWithDemo, useBlockOrdersWithDemo, useEpochProgressWithDemo } from './hooks/useBlockEngineWithDemo';
 
 // Mock market data
 const mockMarketData = {
@@ -14,7 +14,9 @@ const mockMarketData = {
 
 function AppWithBlocks() {
   const [activeTab, setActiveTab] = useState<'trading' | 'blocks'>('trading');
-  const { state, visualizations } = useBlockEngine();
+  const { state, visualizations, getHistoricalEpochs, getDemoStats } = useBlockEngineWithDemo();
+  const recentOrders = useBlockOrdersWithDemo();
+  const epochProgress = useEpochProgressWithDemo();
 
   const navigation = [
     { id: 'trading', label: 'Trading', icon: '📊' },
@@ -96,7 +98,13 @@ function AppWithBlocks() {
 
         {/* Tab Content */}
         {activeTab === 'trading' && (
-          <DarkTradingViewWithBlocks marketData={mockMarketData} />
+          <div className="space-y-6">
+            <DemoStats
+              stats={getDemoStats()}
+              historicalEpochs={getHistoricalEpochs()}
+            />
+            <DarkTradingViewWithBlocks marketData={mockMarketData} />
+          </div>
         )}
 
         {activeTab === 'blocks' && (

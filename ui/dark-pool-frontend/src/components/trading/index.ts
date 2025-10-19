@@ -2,7 +2,8 @@
  * Trading components exports
  */
 
-export { DarkTradingView } from './DarkTradingView.js';
-export { PrivateOrderBlotter } from './PrivateOrderBlotter.js';
-export { DarkTradingViewWithBlocks } from './DarkTradingViewWithBlocks.js';
-export { BlockChainVisualization, EpochComponent } from './BlockVisualization.js';
+export { DarkTradingView } from './DarkTradingView';
+export { PrivateOrderBlotter } from './PrivateOrderBlotter';
+export { DarkTradingViewWithBlocks } from './DarkTradingViewWithBlocks';
+export { BlockChainVisualization, EpochComponent } from './BlockVisualization';
+export { DemoStats } from './DemoStats';

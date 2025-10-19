@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { blockEngine } from '../services/blockEngine.js';
-import {
+import { blockEngine } from '../services/blockEngine';
+import type {
   MatchingEngineState,
   EpochVisualization,
   Order,
   BlockMatchingConfig
-} from '../types/block.js';
+} from '../types/block';
 
 export function useBlockEngine() {
   const [state, setState] = useState<MatchingEngineState>(blockEngine.getState());
@@ -88,7 +88,7 @@ export function useEpochProgress() {
         totalBlocks: 5,
         epochProgress,
         matchingProgress: state.matchingProgress.progress,
-        phase: state.matchingProgress.phase
+        phase: state.matchingProgress.phase as 'collecting' | 'matching' | 'idle'
       });
     }
   }, [state.currentEpoch, state.matchingProgress]);

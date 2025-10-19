@@ -47,8 +47,10 @@ export class ObfuscationUtils {
    */
   private static blurLow(value: number): string {
     if (value === 0) return '0';
-    const firstDigit = Math.floor(value / Math.pow(10, Math.floor(Math.log10(value))));
-    const asterisks = '*'.repeat(Math.floor(Math.log10(value)));
+    if (value < 1) return '*';
+    const log10 = Math.floor(Math.log10(value));
+    const firstDigit = Math.floor(value / Math.pow(10, log10));
+    const asterisks = '*'.repeat(Math.max(0, log10));
     return `${firstDigit}${asterisks}`;
   }
 
@@ -57,9 +59,10 @@ export class ObfuscationUtils {
    */
   private static blurMedium(value: number): string {
     if (value === 0) return '0';
+    if (value < 0.01) return '**';
     const strValue = value.toFixed(2);
     if (strValue.length <= 2) return '**';
-    return `${strValue.substring(0, 2)}${'*'.repeat(strValue.length - 2)}`;
+    return `${strValue.substring(0, 2)}${'*'.repeat(Math.max(0, strValue.length - 2))}`;
   }
 
   /**

@@ -2,4 +2,6 @@
  * Type exports
  */
 
-export * from './auth.js';
+export * from './auth';
+export * from './block';
+export * from './ringvrm';
