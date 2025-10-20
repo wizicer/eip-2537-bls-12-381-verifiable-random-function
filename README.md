@@ -93,7 +93,7 @@ npm run dev
 
 ### 5) Demo 与关键用例 (Demo & Key Flows)
 
-* **视频链接（≤3 分钟，中文）**：[待补充]
+* **视频链接（≤3 分钟，中文）**： https://www.editool.cn/vrf.mp4
 * **关键用例步骤**：
 
 * **Use Case: Order Submission & Verification Display**
