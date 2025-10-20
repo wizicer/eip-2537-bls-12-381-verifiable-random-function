@@ -9,25 +9,44 @@ import type {
   Epoch
 } from '../types/block';
 
-export function useBlockEngineWithDemo() {
+export function useBlockEngineWithDemo(config?: {
+  demoMode?: 'static' | 'dynamic';
+  speed?: 'normal' | 'fast' | 'ultra-fast';
+}) {
+  const { demoMode = 'dynamic', speed = 'fast' } = config || {};
+
   const [state, setState] = useState<MatchingEngineState>(blockEngine.getState());
   const [visualizations, setVisualizations] = useState<EpochVisualization[]>([]);
   const [demoDataLoaded, setDemoDataLoaded] = useState(false);
   const demoDataRef = useRef<ReturnType<typeof generateDemoData> | null>(null);
 
   useEffect(() => {
+    // Configure block engine for demo mode
+    if (demoMode === 'dynamic') {
+      // Speed configurations for demo
+      const speedConfig = {
+        normal: { BLOCK_DURATION: 5000, EPOCH_MATCHING_DELAY: 1000 }, // 5s per block
+        fast: { BLOCK_DURATION: 2000, EPOCH_MATCHING_DELAY: 500 },   // 2s per block
+        'ultra-fast': { BLOCK_DURATION: 1000, EPOCH_MATCHING_DELAY: 200 } // 1s per block
+      };
+
+      // Reconfigure the block engine with demo speed
+      blockEngine.updateConfig(speedConfig[speed]);
+    }
+
     // Load demo data on first mount
     if (!demoDataLoaded) {
-      demoDataRef.current = generateDemoData();
+      // For dynamic mode, generate fewer historical epochs to save memory
+      const numHistoricalEpochs = demoMode === 'dynamic' ? 50 : 5673;
+      demoDataRef.current = generateDemoData(numHistoricalEpochs);
 
       // Add historical epochs to the state
       const currentState = blockEngine.getState();
 
-      // Prepend demo epochs to the existing epochs
-      demoDataRef.current.epochs.forEach((epoch, index) => {
-        // Adjust the index to continue from existing epochs
-        epoch.index = currentState.epochs.size + index;
-
+      // Add demo epochs to the state
+      // Demo epochs already have correct indices (0 to numEpochs-1)
+      // They represent historical data, so they should come before any real-time epochs
+      demoDataRef.current.epochs.forEach(epoch => {
         // Add epoch to state
         currentState.epochs.set(epoch.id, epoch);
 
@@ -46,6 +65,12 @@ export function useBlockEngineWithDemo() {
 
       // Preload current orders
       preloadDemoData(blockEngine);
+
+      // Start the engine for dynamic mode
+      if (demoMode === 'dynamic') {
+        // Start the block engine to begin generating new epochs
+        blockEngine.start();
+      }
 
       setDemoDataLoaded(true);
     }

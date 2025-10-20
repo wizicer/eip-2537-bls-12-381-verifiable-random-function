@@ -7,21 +7,28 @@ export interface DemoData {
   orders: Order[];
 }
 
-export function generateDemoData(): DemoData {
+export function generateDemoData(numEpochs: number = 5673): DemoData {
   const epochs: Epoch[] = [];
   const blocks: Block[] = [];
   const orders: Order[] = [];
 
-  // Generate 3 completed epochs with realistic trading data
-  for (let epochIndex = 0; epochIndex < 3; epochIndex++) {
+  // Generate historical epochs with realistic trading data
+  // Epochs are numbered from 0 to numEpochs-1, with earlier epochs having lower numbers
+  for (let epochIndex = 0; epochIndex < numEpochs; epochIndex++) {
     const epochId = `demo-epoch-${epochIndex}`;
+
+    // Calculate time offset: more recent epochs have smaller offsets
+    // Epoch 0 is the oldest, epoch numEpochs-1 is the most recent
+    const hoursAgo = (numEpochs - epochIndex) * 2.5 / 60; // Each epoch is 2.5 minutes
+    const epochStartTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
+
     const epoch: Epoch = {
       id: epochId,
-      index: epochIndex,
+      index: epochIndex, // Keep original index for proper ordering
       blocks: [],
       status: 'completed',
-      startedAt: new Date(Date.now() - (3 - epochIndex) * 5 * 60 * 1000), // 5 minutes apart
-      completedAt: new Date(Date.now() - (3 - epochIndex) * 5 * 60 * 1000 + 2.5 * 60 * 1000),
+      startedAt: epochStartTime,
+      completedAt: new Date(epochStartTime.getTime() + 2.5 * 60 * 1000), // 2.5 minutes later
       totalOrders: 0,
       matchedOrders: 0
     };
@@ -29,14 +36,15 @@ export function generateDemoData(): DemoData {
     // Generate 5 blocks per epoch
     for (let blockIndex = 0; blockIndex < 5; blockIndex++) {
       const blockId = `demo-block-${epochIndex}-${blockIndex}`;
+      const blockCreatedAt = new Date(epochStartTime.getTime() + blockIndex * 30 * 1000); // 30 seconds per block
       const block: Block = {
         id: blockId,
         epochId: epochId,
         index: blockIndex,
         orders: [],
         status: 'completed',
-        createdAt: new Date(Date.now() - (3 - epochIndex) * 5 * 60 * 1000 + blockIndex * 30 * 1000),
-        matchedAt: new Date(Date.now() - (3 - epochIndex) * 5 * 60 * 1000 + blockIndex * 30 * 1000 + 15 * 1000)
+        createdAt: blockCreatedAt,
+        matchedAt: new Date(blockCreatedAt.getTime() + 15 * 1000) // 15 seconds after creation
       };
 
       // Generate 3-7 orders per block
@@ -65,8 +73,8 @@ export function generateDemoData(): DemoData {
           status: isExecuted ? 'executed' : 'expired',
           blockId: blockId,
           epochId: epochId,
-          createdAt: new Date(Date.now() - (3 - epochIndex) * 5 * 60 * 1000 + blockIndex * 30 * 1000 + orderIndex * 1000),
-          executedAt: isExecuted ? new Date(Date.now() - (3 - epochIndex) * 5 * 60 * 1000 + blockIndex * 30 * 1000 + 15 * 1000) : undefined,
+          createdAt: new Date(blockCreatedAt.getTime() + orderIndex * 1000),
+          executedAt: isExecuted ? new Date(blockCreatedAt.getTime() + 15 * 1000) : undefined,
           executedPrice: isExecuted ? price + (Math.random() - 0.5) * 5 : undefined,
           matchPriority: Math.floor(Math.random() * 1000) + 1,
           counterparties: isExecuted ? [ObfuscationUtils.obfuscateId(`demo-counterpart-${orderId}`)] : undefined

@@ -66,7 +66,17 @@ export class BlockEngine {
   // Create a new epoch
   private createNewEpoch() {
     const epochId = ObfuscationUtils.generateId('epoch');
-    const epochIndex = this.state.epochs.size;
+
+    // Find the maximum existing epoch index
+    let maxIndex = -1;
+    this.state.epochs.forEach(epoch => {
+      if (epoch.index > maxIndex) {
+        maxIndex = epoch.index;
+      }
+    });
+
+    // New epoch index is one more than the maximum
+    const epochIndex = maxIndex + 1;
 
     const epoch: Epoch = {
       id: epochId,
@@ -100,14 +110,23 @@ export class BlockEngine {
     }
 
     const blockId = ObfuscationUtils.generateId('block');
+
+    // Generate some demo orders for this block
+    const demoOrders = this.generateDemoOrdersForBlock(blockId, epoch.id);
+
     const block: Block = {
       id: blockId,
       epochId: epoch.id,
       index: epoch.blocks.length,
-      orders: [],
+      orders: demoOrders,
       status: 'pending',
       createdAt: new Date()
     };
+
+    // Add orders to the state
+    demoOrders.forEach(order => {
+      this.state.orders.set(order.id, order);
+    });
 
     epoch.blocks.push(block);
     this.state.blocks.set(blockId, block);
@@ -296,10 +315,87 @@ export class BlockEngine {
     return { ...this.state };
   }
 
+  // Update configuration
+  public updateConfig(newConfig: Partial<BlockMatchingConfig>) {
+    this.config = { ...this.config, ...newConfig };
+
+    // Restart timers if engine is running
+    if (this.state.currentEpoch) {
+      // Clear existing timers
+      if (this.blockTimer) clearInterval(this.blockTimer);
+
+      // Restart block generation with new timing
+      this.blockTimer = setInterval(() => {
+        this.createNewBlock();
+      }, this.config.BLOCK_DURATION);
+    }
+  }
+
+  // Start the engine
+  public start() {
+    // If there's no current epoch, create one
+    if (!this.state.currentEpoch) {
+      this.createNewEpoch();
+    }
+  }
+
+  // Stop the engine
+  public stop() {
+    // Clear timers but keep state
+    if (this.blockTimer) {
+      clearInterval(this.blockTimer);
+      this.blockTimer = undefined;
+    }
+    if (this.epochTimer) {
+      clearTimeout(this.epochTimer);
+      this.epochTimer = undefined;
+    }
+  }
+
+  // Generate demo orders for a block
+  private generateDemoOrdersForBlock(blockId: string, epochId: string): Order[] {
+    const orders: Order[] = [];
+    const numOrders = Math.floor(Math.random() * 5) + 3; // 3-7 orders per block
+
+    // Get base price from epoch index for realistic price progression
+    const epochIndex = Array.from(this.state.epochs.values()).find(e => e.id === epochId)?.index || 0;
+    const basePrice = 2000 + epochIndex * 50;
+
+    for (let i = 0; i < numOrders; i++) {
+      const orderId = ObfuscationUtils.generateId('order');
+      const isBuy = Math.random() > 0.5;
+      const priceVariation = (Math.random() - 0.5) * 20;
+      const price = Math.round((basePrice + priceVariation) * 100) / 100;
+
+      // 70% chance of being a limit order with price range, 30% market order
+      const isLimitOrder = Math.random() > 0.3;
+
+      const order: Order = {
+        id: orderId,
+        symbol: 'ETH-USD',
+        side: isBuy ? 'buy' : 'sell',
+        amount: Math.round((Math.random() * 2 + 0.1) * 100) / 100, // 0.1 to 2.1 ETH
+        price: isLimitOrder ? price : undefined,
+        priceRange: !isLimitOrder ? {
+          min: price - 10,
+          max: price + 10
+        } : undefined,
+        status: 'pending',
+        blockId: blockId,
+        epochId: epochId,
+        createdAt: new Date(),
+        matchPriority: Math.floor(Math.random() * 1000) + 1
+      };
+
+      orders.push(order);
+    }
+
+    return orders;
+  }
+
   // Cleanup
   public destroy() {
-    if (this.blockTimer) clearInterval(this.blockTimer);
-    if (this.epochTimer) clearInterval(this.epochTimer);
+    this.stop();
     this.subscribers.clear();
   }
 }

@@ -6,11 +6,13 @@ import { cn } from '../../utils/cn.js';
 
 interface DarkIdentityInitProps {
   onIdentityCreated?: (identity: { anonymousId: string; publicKey: string }) => void;
+  onAuth?: (identity: { anonymousId: string; publicKey: string }) => void;
   className?: string;
 }
 
 export const DarkIdentityInit: React.FC<DarkIdentityInitProps> = ({
   onIdentityCreated,
+  onAuth,
   className = ''
 }) => {
   const { wallet, signMessage } = useWallet();
@@ -62,6 +64,7 @@ export const DarkIdentityInit: React.FC<DarkIdentityInitProps> = ({
       EncryptionUtils.encryptAndStore('identity', newIdentity);
 
       onIdentityCreated?.(newIdentity);
+      onAuth?.(newIdentity);
 
     } catch (error: any) {
       console.error('Failed to generate identity:', error);

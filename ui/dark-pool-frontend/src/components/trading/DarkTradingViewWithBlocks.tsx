@@ -3,8 +3,10 @@ import { ArrowTrendingUpIcon, ArrowTrendingDownIcon, EyeIcon, EyeSlashIcon, Cube
 import { BlurredBalance, RangeDisplay } from '../privacy/index';
 import { ObfuscationUtils, RangeUtils } from '../../utils/index';
 import { cn } from '../../utils/cn';
-import { useBlockEngine, useEpochProgress } from '../../hooks/useBlockEngine';
+import { useBlockEngineWithDemo, useEpochProgressWithDemo } from '../../hooks/useBlockEngineWithDemo';
+import { useDemoControls } from '../../hooks/useDemoControls';
 import { BlockChainVisualization } from './BlockVisualization';
+import { DemoControlPanel } from './DemoControlPanel';
 import type { Order } from '../../types/block';
 
 interface MarketData {
@@ -19,11 +21,13 @@ interface MarketData {
 interface DarkTradingViewWithBlocksProps {
   marketData: MarketData;
   className?: string;
+  identity?: { anonymousId: string; publicKey: string } | null;
 }
 
 export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps> = ({
   marketData,
-  className = ''
+  className = '',
+  identity
 }) => {
   const [showPrices, setShowPrices] = useState(false);
   const [orderType, setOrderType] = useState<'limit' | 'market'>('limit');
@@ -32,8 +36,12 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
   const [price, setPrice] = useState('');
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
 
-  const { state, visualizations, addOrder } = useBlockEngine();
-  const epochProgress = useEpochProgress();
+  const { state, visualizations, addOrder } = useBlockEngineWithDemo({
+    demoMode: 'dynamic',
+    speed: 'fast'
+  });
+  const { isRunning, speed, handleSpeedChange, handleStartStop } = useDemoControls('fast');
+  const epochProgress = useEpochProgressWithDemo();
 
   // Update recent orders when state changes
   useEffect(() => {
@@ -48,6 +56,12 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
 
     if (!amount) return;
 
+    // Check if identity is verified
+    if (!identity) {
+      alert('Please create your identity first before placing orders.');
+      return;
+    }
+
     const orderData = {
       symbol: marketData.symbol,
       side,
@@ -56,7 +70,8 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
       priceRange: orderType === 'limit' && price ? {
         min: parseFloat(price) * 0.99,
         max: parseFloat(price) * 1.01
-      } : undefined
+      } : undefined,
+      anonymousId: identity.anonymousId // Include anonymous ID in order
     };
 
     const order = addOrder(orderData);
@@ -209,7 +224,20 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
 
       {/* Order Form */}
       <div className="bg-gray-900 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-200 mb-4">Place Order</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-200">Place Order</h3>
+          {identity ? (
+            <div className="flex items-center space-x-2 text-xs text-green-400">
+              <div className="w-2 h-2 bg-green-400 rounded-full" />
+              <span>Verified Identity</span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2 text-xs text-yellow-400">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full" />
+              <span>Identity Required</span>
+            </div>
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex space-x-2">
             <button
@@ -369,6 +397,13 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
           </div>
         </div>
       )}
+
+      {/* Demo Control Panel */}
+      <DemoControlPanel
+        isRunning={isRunning}
+        onSpeedChange={handleSpeedChange}
+        currentSpeed={speed}
+      />
 
     </div>
   );
