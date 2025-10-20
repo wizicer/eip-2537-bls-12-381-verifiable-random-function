@@ -38,6 +38,16 @@ flowchart LR
   * 前端：React + Tailwind + Ethers.js，用于提交/展示订单与 epoch 状态
   * 合约：Solidity 智能合约（EIP-2537 调用 + VRF 验证 + 排序逻辑）
 
+* **核心逻辑**:
+
+![](./formula.png)
+
+详细查看[vrf.pdf](./vrf_research/docs/vrf.pdf)
+
+参考文献：
+- Burdges, Jeffrey, Oana Ciobotaru, Handan Kılınç Alper, Alistair Stewart, and Sergey Vasilyev. “Ring Verifiable Random Functions and Zero-Knowledge Continuations,” 2023. Cryptology ePrint Archive. https://eprint.iacr.org/2023/002.
+- DeepSafe: A Cryptography Random Verification Layer. https://github.com/deepsafe/whitepaper/blob/main/DeepSafe_A_Cryptography_Random_Verification_Layer.pdf
+
 
 ### 3) 合约与部署 (Contracts & Deployment)
 
