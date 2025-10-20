@@ -62,6 +62,7 @@ flowchart LR
 ```bash
 cd ui/vrf
 npm install
+npm run compile
 npm run dev
 # 打开 http://localhost:5173
 ```
