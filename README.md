@@ -63,6 +63,8 @@ flowchart LR
 cd ui/vrf
 npm install
 npm run compile
+npm run node
+npm run deploy
 npm run dev
 # 打开 http://localhost:5173
 ```
