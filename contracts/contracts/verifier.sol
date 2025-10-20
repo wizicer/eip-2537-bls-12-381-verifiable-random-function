@@ -21,12 +21,7 @@ contract EIP2537VrfStyleVerifier {
 
     // G1 generator (H1) coordinates from the spec (uncompressed 128 bytes: X(64) || Y(64), both big-endian).
     // See EIP-2537 "Generators: H1" (we use H1 as the canonical G1 generator) .
-    bytes constant G1_GENERATOR = hex"
-        0000000000000000000000000000000000000000000000000000000000000000
-        17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac58
-        0000000000000000000000000000000000000000000000000000000000000000
-        08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3ed
-    ";
+    bytes constant G1_GENERATOR = hex"000000000000000000000000000000000000000000000000000000000000000017f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac58000000000000000000000000000000000000000000000000000000000000000008b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3ed";
 
     // --- Errors ---
     error PrecompileFailure();   // low-level call to precompile failed (bad encoding/out of subgroup, etc.)
@@ -108,7 +103,9 @@ contract EIP2537VrfStyleVerifier {
         out128 = new bytes(128);
         bool ok;
         assembly {
-            let success := staticcall(gas(), BLS12_MAP_FP_TO_G1, add(fp64, 0x20), 64, add(out128, 0x20), 128)
+            let fp64Ptr := add(fp64, 0x20)
+            let out128Ptr := add(out128, 0x20)
+            let success := staticcall(gas(), 0x10, fp64Ptr, 64, out128Ptr, 128)
             ok := success
         }
         if (!ok) revert PrecompileFailure();
@@ -139,7 +136,10 @@ contract EIP2537VrfStyleVerifier {
         out128 = new bytes(128);
         bool ok;
         assembly {
-            let success := staticcall(gas(), BLS12_G1MSM, add(inBuf, 0x20), mload(inBuf), add(out128, 0x20), 128)
+            let inBufPtr := add(inBuf, 0x20)
+            let inBufLen := mload(inBuf)
+            let out128Ptr := add(out128, 0x20)
+            let success := staticcall(gas(), 0x0c, inBufPtr, inBufLen, out128Ptr, 128)
             ok := success
         }
         if (!ok) revert PrecompileFailure();
