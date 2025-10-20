@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { blockEngine } from '../services/blockEngine';
-import { preloadDemoData, generateDemoData } from '../test/demoDataGenerator';
+// Removed demo data generator imports to eliminate fabricated trading data
 import type {
   MatchingEngineState,
   EpochVisualization,
@@ -36,39 +36,11 @@ export function useBlockEngineWithDemo(config?: {
 
     // Load demo data on first mount
     if (!demoDataLoaded) {
-      // For dynamic mode, generate fewer historical epochs to save memory
-      const numHistoricalEpochs = demoMode === 'dynamic' ? 50 : 5673;
-      demoDataRef.current = generateDemoData(numHistoricalEpochs);
+      // Initialize with empty data - no fabricated trading data
+      demoDataRef.current = { epochs: [], blocks: [], orders: [] };
 
-      // Add historical epochs to the state
-      const currentState = blockEngine.getState();
-
-      // Add demo epochs to the state
-      // Demo epochs already have correct indices (0 to numEpochs-1)
-      // They represent historical data, so they should come before any real-time epochs
-      demoDataRef.current.epochs.forEach(epoch => {
-        // Add epoch to state
-        currentState.epochs.set(epoch.id, epoch);
-
-        // Add blocks to state
-        epoch.blocks.forEach(block => {
-          currentState.blocks.set(block.id, block);
-        });
-
-        // Add orders to state
-        epoch.blocks.forEach(block => {
-          block.orders.forEach(order => {
-            currentState.orders.set(order.id, order);
-          });
-        });
-      });
-
-      // Preload current orders
-      preloadDemoData(blockEngine);
-
-      // Start the engine for dynamic mode
+      // Start the engine for real-time data only
       if (demoMode === 'dynamic') {
-        // Start the block engine to begin generating new epochs
         blockEngine.start();
       }
 
@@ -104,24 +76,12 @@ export function useBlockEngineWithDemo(config?: {
   }, []);
 
   const getDemoStats = useCallback(() => {
-    if (!demoDataRef.current) {
-      return {
-        totalEpochs: 0,
-        totalOrders: 0,
-        totalMatched: 0,
-        matchRate: '0'
-      };
-    }
-
-    const { epochs } = demoDataRef.current;
-    const totalOrders = epochs.reduce((sum, epoch) => sum + epoch.totalOrders, 0);
-    const totalMatched = epochs.reduce((sum, epoch) => sum + epoch.matchedOrders, 0);
-
+    // Return empty stats since we no longer use fabricated demo data
     return {
-      totalEpochs: epochs.length,
-      totalOrders,
-      totalMatched,
-      matchRate: totalOrders > 0 ? (totalMatched / totalOrders * 100).toFixed(1) : '0'
+      totalEpochs: 0,
+      totalOrders: 0,
+      totalMatched: 0,
+      matchRate: '0'
     };
   }, []);
 

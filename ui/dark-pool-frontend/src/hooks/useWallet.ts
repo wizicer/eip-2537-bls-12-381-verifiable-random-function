@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { type WalletInfo } from '../types/auth.js';
+import { NETWORKS } from '../config/networks.js';
 
 declare global {
   interface Window {
@@ -91,7 +92,19 @@ export const useWallet = () => {
         params: [{ chainId: `0x${chainId.toString(16)}` }],
       });
     } catch (err: any) {
-      setError(err.message || 'Failed to switch chain');
+      // This error code indicates that the chain has not been added to MetaMask
+      if (err.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [NETWORKS.localhost],
+          });
+        } catch (addError: any) {
+          setError(addError.message || 'Failed to add network');
+        }
+      } else {
+        setError(err.message || 'Failed to switch chain');
+      }
     }
   }, []);
 

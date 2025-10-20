@@ -174,7 +174,7 @@ function App() {
             <HardwareConfirmation
               transaction={{
                 action: 'Dark Pool Trade',
-                amount: '1.5 ETH',
+                amount: 'Order amount will be shown here', // Dynamic based on actual order
                 recipient: 'Dark Pool Contract',
                 asset: 'ETH'
               }}

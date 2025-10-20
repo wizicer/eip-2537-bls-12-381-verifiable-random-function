@@ -12,21 +12,13 @@ interface DemoStatsProps {
 }
 
 export const DemoStats: React.FC<DemoStatsProps> = ({ stats, historicalEpochs }) => {
+  // Don't display demo stats since we've removed all fabricated trading data
+  // This component now shows a message indicating real trading is needed
   return (
     <div className="bg-gray-900 rounded-lg p-4 mb-6">
-      <div className="grid grid-cols-3 gap-4">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-blue-400">{stats.totalOrders}</div>
-          <div className="text-xs text-gray-400">Total Orders</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-green-400">{stats.totalMatched}</div>
-          <div className="text-xs text-gray-400">Matched</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-purple-400">{stats.matchRate}%</div>
-          <div className="text-xs text-gray-400">Success Rate</div>
-        </div>
+      <div className="text-center text-gray-500">
+        <div className="text-lg font-medium mb-2">No Demo Data</div>
+        <div className="text-xs">Trading statistics will appear when real orders are placed</div>
       </div>
     </div>
   );

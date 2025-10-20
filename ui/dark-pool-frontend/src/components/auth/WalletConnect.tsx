@@ -12,7 +12,7 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
   onConnect,
   className = ''
 }) => {
-  const { wallet, isConnecting, error, connectWallet } = useWallet();
+  const { wallet, isConnecting, error, connectWallet, switchChain } = useWallet();
   const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(true);
 
   // Check if MetaMask is installed
@@ -36,12 +36,23 @@ export const WalletConnect: React.FC<WalletConnectProps> = ({
   };
 
   if (wallet) {
+    const isLocalhost = wallet.chainId === 31337;
+
     return (
-      <div className={cn('flex items-center space-x-2', className)}>
+      <div className={cn('flex items-center space-x-3', className)}>
         <div className="h-2 w-2 bg-green-400 rounded-full" />
         <span className="text-sm text-gray-300">
           {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
         </span>
+        {!isLocalhost && (
+          <button
+            onClick={() => switchChain(31337)}
+            className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors"
+            title="Switch to Localhost 8545"
+          >
+            Switch to Localhost
+          </button>
+        )}
       </div>
     );
   }

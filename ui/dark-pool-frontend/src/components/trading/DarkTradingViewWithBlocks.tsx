@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowTrendingUpIcon, ArrowTrendingDownIcon, EyeIcon, EyeSlashIcon, CubeIcon } from '@heroicons/react/24/outline';
-import { BlurredBalance, RangeDisplay } from '../privacy/index';
+import { ArrowTrendingUpIcon, ArrowTrendingDownIcon, CubeIcon } from '@heroicons/react/24/outline';
+import { RangeDisplay } from '../privacy/index';
 import { ObfuscationUtils, RangeUtils } from '../../utils/index';
 import { cn } from '../../utils/cn';
 import { useBlockEngineWithDemo, useEpochProgressWithDemo } from '../../hooks/useBlockEngineWithDemo';
@@ -29,7 +29,6 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
   className = '',
   identity
 }) => {
-  const [showPrices, setShowPrices] = useState(false);
   const [orderType, setOrderType] = useState<'limit' | 'market'>('limit');
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [amount, setAmount] = useState('');
@@ -37,7 +36,7 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
 
   const { state, visualizations, addOrder } = useBlockEngineWithDemo({
-    demoMode: 'dynamic',
+    demoMode: 'static',
     speed: 'fast'
   });
   const { isRunning, speed, handleSpeedChange, handleStartStop } = useDemoControls('fast');
@@ -150,30 +149,13 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
       <div className="bg-gray-900 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-100">{marketData.symbol}</h2>
-          <button
-            onClick={() => setShowPrices(!showPrices)}
-            className="p-2 text-gray-400 hover:text-gray-200 transition-colors"
-            title={showPrices ? 'Hide prices' : 'Show prices'}
-          >
-            {showPrices ? (
-              <EyeSlashIcon className="h-5 w-5" />
-            ) : (
-              <EyeIcon className="h-5 w-5" />
-            )}
-          </button>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="text-sm text-gray-400 mb-1">Price</div>
-            <div className="text-2xl font-bold">
-              {showPrices ? (
-                <span className="text-gray-100">
-                  ${marketData.price.toFixed(2)}
-                </span>
-              ) : (
-                <span className="text-gray-500">****</span>
-              )}
+            <div className="text-2xl font-bold text-gray-100">
+              ${marketData.price.toFixed(2)}
             </div>
           </div>
 
@@ -185,13 +167,9 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
               ) : (
                 <ArrowTrendingDownIcon className="h-6 w-6 text-red-400 mr-2" />
               )}
-              {showPrices ? (
-                <span className={marketData.change >= 0 ? 'text-green-400' : 'text-red-400'}>
-                  {marketData.change >= 0 ? '+' : ''}{marketData.changePercent.toFixed(2)}%
-                </span>
-              ) : (
-                <span className="text-gray-500">*.*%</span>
-              )}
+              <span className={marketData.change >= 0 ? 'text-green-400' : 'text-red-400'}>
+                {marketData.change >= 0 ? '+' : ''}{marketData.changePercent.toFixed(2)}%
+              </span>
             </div>
           </div>
         </div>
@@ -207,16 +185,12 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="text-sm text-gray-400 mb-1">Spread</div>
             <div className="font-semibold text-gray-300">
-              {showPrices ? (
-                <RangeDisplay
-                  value={marketData.spread.min}
-                  variance={((marketData.spread.max - marketData.spread.min) / marketData.spread.min) * 100}
-                  precision={2}
-                  unit=" USD"
-                />
-              ) : (
-                <span className="text-gray-500">*.*</span>
-              )}
+              <RangeDisplay
+                value={marketData.spread.min}
+                variance={((marketData.spread.max - marketData.spread.min) / marketData.spread.min) * 100}
+                precision={2}
+                unit=" USD"
+              />
             </div>
           </div>
         </div>
@@ -295,47 +269,29 @@ export const DarkTradingViewWithBlocks: React.FC<DarkTradingViewWithBlocksProps>
 
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">
-              Amount
+              Amount (ETH)
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.0000"
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono"
-              />
-              {!showPrices && amount && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-gray-600 font-mono">
-                    {ObfuscationUtils.blurValue(amount, 'medium')}
-                  </span>
-                </div>
-              )}
-            </div>
+            <input
+              type="text"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.0000"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono"
+            />
           </div>
 
           {orderType === 'limit' && (
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">
-                Price
+                Price (USD)
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono"
-                />
-                {!showPrices && price && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-gray-600 font-mono">
-                      {ObfuscationUtils.blurValue(price, 'medium')}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <input
+                type="text"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0.00"
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono"
+              />
             </div>
           )}
 

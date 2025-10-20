@@ -1,6 +1,22 @@
 import React from 'react';
+import { RealTradingView, TransactionMonitor } from './components/trading/RealTradingView';
 
 function App() {
+  // Note: Market data should come from real-time sources, not hardcoded values
+  // This will be replaced with actual market data integration
+  const marketData = {
+    symbol: 'ETH-USD',
+    price: null, // Will be fetched from real market data
+    change: null,
+    changePercent: null,
+    liquidity: 'medium' as const,
+    spread: { min: null, max: null }
+  };
+
+  const handleWalletConnect = (address: string) => {
+    console.log('Wallet connected:', address);
+  };
+
   return (
     <div style={{ padding: '20px', backgroundColor: '#030712', color: '#f3f4f6', minHeight: '100vh' }}>
       <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>Dark Pool Trading Interface</h1>
@@ -19,25 +35,16 @@ function App() {
           <li style={{ marginBottom: '8px' }}>✅ Hardware Wallet Integration</li>
           <li style={{ marginBottom: '8px' }}>✅ ZK-Proof Compliance</li>
           <li style={{ marginBottom: '8px' }}>✅ Obfuscated Balances</li>
+          <li style={{ marginBottom: '8px' }}>✅ Real-time Transaction Monitoring</li>
         </ul>
       </div>
 
-      <div style={{
-        padding: '20px',
-        backgroundColor: '#374151',
-        borderRadius: '8px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '10px' }}>Connect Wallet to Begin</h3>
-        <button style={{
-          padding: '10px 20px',
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: 'pointer'
-        }}>
-          Connect Wallet
-        </button>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <RealTradingView
+          marketData={marketData}
+          onWalletConnect={handleWalletConnect}
+        />
+        <TransactionMonitor />
       </div>
     </div>
   );

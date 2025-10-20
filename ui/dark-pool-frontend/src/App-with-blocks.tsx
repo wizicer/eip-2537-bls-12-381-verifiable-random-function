@@ -1,23 +1,21 @@
 import React, { useState } from 'react';
-import { DarkTradingViewWithBlocks, SimpleBlockVisualization, DemoStats } from './components/trading/index';
+import { DarkTradingViewWithBlocks, TradeList } from './components/trading/index';
 import { WalletConnect, DarkIdentityInit } from './components/auth/index';
 import { useBlockEngineWithDemo } from './hooks/useBlockEngineWithDemo';
 import { cn } from './utils/cn';
-import type { Block } from './types/block';
 
-// Mock market data
+// Mock market data - updated to current ETH price ~$4000
 const mockMarketData = {
   symbol: 'ETH-USD',
-  price: 2000.50,
-  change: 15.25,
-  changePercent: 0.77,
+  price: 4025.50,
+  change: 65.30,
+  changePercent: 1.65,
   liquidity: 'high' as const,
-  spread: { min: 1999.50, max: 2001.50 }
+  spread: { min: 4024.50, max: 4026.50 }
 };
 
 function AppWithBlocks() {
   const { state, visualizations, getHistoricalEpochs, getDemoStats } = useBlockEngineWithDemo();
-  const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [identity, setIdentity] = useState<{ anonymousId: string; publicKey: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
 
@@ -96,14 +94,8 @@ function AppWithBlocks() {
           </div>
         )}
 
-        {/* Demo Stats - Full Width */}
-        <DemoStats
-          stats={getDemoStats()}
-          historicalEpochs={getHistoricalEpochs()}
-        />
-
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Left Column - Trading */}
           <div className="space-y-6">
             <div className="bg-gray-900 rounded-xl p-6">
@@ -112,81 +104,11 @@ function AppWithBlocks() {
             </div>
           </div>
 
-          {/* Right Column - Block Structure */}
+          {/* Right Column - Trade List */}
           <div className="space-y-6">
             <div className="bg-gray-900 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-gray-200 mb-4">
-                {selectedBlock ? `Block #${selectedBlock.index + 1} Orders` : 'Block Structure'}
-              </h2>
-
-              {selectedBlock ? (
-                <div className="space-y-4">
-                  <button
-                    onClick={() => setSelectedBlock(null)}
-                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                  >
-                    ← Back to all blocks
-                  </button>
-
-                  <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                    {selectedBlock.orders.map((order: any) => (
-                      <div
-                        key={order.id}
-                        className={cn(
-                          'bg-gray-800 rounded-lg p-3 border',
-                          order.status === 'executed' ? 'border-green-500/30' :
-                          order.status === 'pending' ? 'border-yellow-500/30' :
-                          'border-gray-700'
-                        )}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <span className={cn(
-                              'text-sm font-medium',
-                              order.side === 'buy' ? 'text-green-400' : 'text-red-400'
-                            )}>
-                              {order.side.toUpperCase()}
-                            </span>
-                            <span className="text-gray-300">
-                              {order.amount.toFixed(4)} ETH
-                            </span>
-                            {order.price && (
-                              <span className="text-gray-400">
-                                @ ${order.price.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                          <span className={cn(
-                            'text-xs px-2 py-1 rounded',
-                            order.status === 'executed' ? 'bg-green-900/50 text-green-400' :
-                            order.status === 'pending' ? 'bg-yellow-900/50 text-yellow-400' :
-                            'bg-gray-700 text-gray-400'
-                          )}>
-                            {order.status}
-                          </span>
-                        </div>
-
-                        {order.executedPrice && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            Executed at ${order.executedPrice.toFixed(2)}
-                          </div>
-                        )}
-
-                        {order.priceRange && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            Range: ${order.priceRange.min} - ${order.priceRange.max}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <SimpleBlockVisualization
-                  visualizations={visualizations}
-                  onBlockClick={(block) => setSelectedBlock(block)}
-                />
-              )}
+              <h2 className="text-lg font-semibold text-gray-200 mb-4">Trading Activity</h2>
+              <TradeList visualizations={visualizations} />
             </div>
           </div>
         </div>

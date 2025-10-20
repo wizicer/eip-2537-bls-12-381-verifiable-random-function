@@ -111,19 +111,20 @@ export class BlockEngine {
 
     const blockId = ObfuscationUtils.generateId('block');
 
-    // Generate some demo orders for this block
-    const demoOrders = this.generateDemoOrdersForBlock(blockId, epoch.id);
+    // Demo order generation disabled - no fabricated trading data
+    // Blocks will only contain real user orders
+    const demoOrders: Order[] = [];
 
     const block: Block = {
       id: blockId,
       epochId: epoch.id,
       index: epoch.blocks.length,
-      orders: demoOrders,
+      orders: demoOrders, // Empty until real orders are added
       status: 'pending',
       createdAt: new Date()
     };
 
-    // Add orders to the state
+    // Add real orders to the state (none for now - will be added by users)
     demoOrders.forEach(order => {
       this.state.orders.set(order.id, order);
     });
@@ -352,46 +353,8 @@ export class BlockEngine {
     }
   }
 
-  // Generate demo orders for a block
-  private generateDemoOrdersForBlock(blockId: string, epochId: string): Order[] {
-    const orders: Order[] = [];
-    const numOrders = Math.floor(Math.random() * 5) + 3; // 3-7 orders per block
-
-    // Get base price from epoch index for realistic price progression
-    const epochIndex = Array.from(this.state.epochs.values()).find(e => e.id === epochId)?.index || 0;
-    const basePrice = 2000 + epochIndex * 50;
-
-    for (let i = 0; i < numOrders; i++) {
-      const orderId = ObfuscationUtils.generateId('order');
-      const isBuy = Math.random() > 0.5;
-      const priceVariation = (Math.random() - 0.5) * 20;
-      const price = Math.round((basePrice + priceVariation) * 100) / 100;
-
-      // 70% chance of being a limit order with price range, 30% market order
-      const isLimitOrder = Math.random() > 0.3;
-
-      const order: Order = {
-        id: orderId,
-        symbol: 'ETH-USD',
-        side: isBuy ? 'buy' : 'sell',
-        amount: Math.round((Math.random() * 2 + 0.1) * 100) / 100, // 0.1 to 2.1 ETH
-        price: isLimitOrder ? price : undefined,
-        priceRange: !isLimitOrder ? {
-          min: price - 10,
-          max: price + 10
-        } : undefined,
-        status: 'pending',
-        blockId: blockId,
-        epochId: epochId,
-        createdAt: new Date(),
-        matchPriority: Math.floor(Math.random() * 1000) + 1
-      };
-
-      orders.push(order);
-    }
-
-    return orders;
-  }
+  // Demo order generation function removed to prevent fabricated trading data
+  // Blocks will now only contain real user orders
 
   // Cleanup
   public destroy() {
