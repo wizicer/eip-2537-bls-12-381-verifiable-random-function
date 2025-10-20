@@ -51,20 +51,7 @@ flowchart LR
 
 ### 3) 合约与部署 (Contracts & Deployment)
 
-* **网络**：Sepolia 测试网
-* **核心合约与地址**：
-
-  ```text
-  DarkPoolVRF: 0x...
-  EpochManager: 0x...
-  ```
-* **验证链接（Etherscan/BlockScout）**：[部署后补充]
-* **最小复现脚本**：
-
-  ```bash
-  forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast
-  forge test
-  ```
+* **网络**：Local testnet
 
 ### 4) 运行与复现 (Run & Reproduce)
 
