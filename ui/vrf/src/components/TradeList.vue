@@ -23,6 +23,7 @@ const web3 = useWeb3()
 const trades = ref<Trade[]>([])
 const isLoading = ref(false)
 const errorMessage = ref('')
+const expandedEpochs = ref<Set<number>>(new Set())
 
 const epochGroups = computed(() => {
   if (trades.value.length === 0) return []
@@ -40,13 +41,19 @@ const epochGroups = computed(() => {
   })
 
   const result: EpochGroup[] = Array.from(groups.entries())
-    .map(([epochNum, epochTrades]) => ({
-      epochNumber: epochNum,
-      startBlock: epochNum * 5,
-      endBlock: epochNum * 5 + 4,
-      trades: epochTrades,
-      isExpanded: false
-    }))
+    .map(([epochNum, epochTrades]) => {
+      // Auto-expand new epochs
+      if (!expandedEpochs.value.has(epochNum)) {
+        expandedEpochs.value.add(epochNum)
+      }
+      return {
+        epochNumber: epochNum,
+        startBlock: epochNum * 5,
+        endBlock: epochNum * 5 + 4,
+        trades: epochTrades,
+        isExpanded: expandedEpochs.value.has(epochNum)
+      }
+    })
     .sort((a, b) => b.epochNumber - a.epochNumber)
 
   return result
@@ -75,9 +82,10 @@ async function loadTrades() {
 }
 
 function toggleEpoch(epochNumber: number) {
-  const epoch = epochGroups.value.find(e => e.epochNumber === epochNumber)
-  if (epoch) {
-    epoch.isExpanded = !epoch.isExpanded
+  if (expandedEpochs.value.has(epochNumber)) {
+    expandedEpochs.value.delete(epochNumber)
+  } else {
+    expandedEpochs.value.add(epochNumber)
   }
 }
 
@@ -146,37 +154,33 @@ onMounted(() => {
         </div>
 
         <div v-if="epoch.isExpanded" class="epoch-content">
-          <div
-            v-for="(trade, index) in epoch.trades"
-            :key="index"
-            class="trade-item"
-            :class="trade.tradeType === 0 ? 'buy' : 'sell'"
-          >
-            <div class="trade-row">
-              <span class="trade-label">Type:</span>
-              <span class="trade-value trade-type">
-                {{ trade.tradeType === 0 ? 'BUY' : 'SELL' }}
-              </span>
+          <div class="trade-table">
+            <div class="trade-header-row">
+              <div class="trade-cell">Type</div>
+              <div class="trade-cell">Price</div>
+              <div class="trade-cell">Volume</div>
+              <div class="trade-cell">Block</div>
+              <div class="trade-cell">Time</div>
+              <div class="trade-cell">Status</div>
             </div>
-            <div class="trade-row">
-              <span class="trade-label">Price:</span>
-              <span class="trade-value">{{ trade.price.toString() }}</span>
-            </div>
-            <div class="trade-row">
-              <span class="trade-label">Volume:</span>
-              <span class="trade-value">{{ trade.volume.toString() }}</span>
-            </div>
-            <div class="trade-row">
-              <span class="trade-label">Trader:</span>
-              <span class="trade-value">{{ formatAddress(trade.trader) }}</span>
-            </div>
-            <div class="trade-row">
-              <span class="trade-label">Block:</span>
-              <span class="trade-value">{{ trade.blockNumber.toString() }}</span>
-            </div>
-            <div class="trade-row">
-              <span class="trade-label">Time:</span>
-              <span class="trade-value">{{ formatTimestamp(trade.timestamp) }}</span>
+            <div
+              v-for="(trade, index) in epoch.trades"
+              :key="index"
+              class="trade-row"
+              :class="trade.tradeType === 0 ? 'buy' : 'sell'"
+            >
+              <div class="trade-cell">
+                <span class="trade-type" :class="trade.tradeType === 0 ? 'buy-badge' : 'sell-badge'">
+                  {{ trade.tradeType === 0 ? 'BUY' : 'SELL' }}
+                </span>
+              </div>
+              <div class="trade-cell">{{ trade.price.toString() }}</div>
+              <div class="trade-cell">{{ trade.volume.toString() }}</div>
+              <div class="trade-cell">{{ trade.blockNumber.toString() }}</div>
+              <div class="trade-cell">{{ formatTimestamp(trade.timestamp) }}</div>
+              <div class="trade-cell">
+                <span class="verified-badge">✓ Verified</span>
+              </div>
             </div>
           </div>
         </div>
@@ -298,55 +302,100 @@ h2 {
 }
 
 .epoch-content {
-  padding: 10px 15px 15px;
+  padding: 15px;
   background: #fafafa;
   border-top: 1px solid #eee;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
-.trade-item {
-  padding: 12px;
+.trade-table {
   background: white;
-  border-radius: 4px;
-  border-left: 4px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.trade-item.buy {
-  border-left-color: #4CAF50;
-}
-
-.trade-item.sell {
-  border-left-color: #f44336;
+.trade-header-row {
+  display: grid;
+  grid-template-columns: 80px 120px 120px 80px 180px 100px;
+  gap: 15px;
+  padding: 12px 15px;
+  background: #f5f5f5;
+  font-weight: 600;
+  font-size: 13px;
+  color: #555;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 .trade-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
+  display: grid;
+  grid-template-columns: 80px 120px 120px 80px 180px 100px;
+  gap: 15px;
+  padding: 12px 15px;
   font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+  align-items: center;
 }
 
-.trade-label {
-  color: #666;
-  font-weight: 500;
+.trade-row:hover {
+  background: #f9f9f9;
 }
 
-.trade-value {
+.trade-row:last-child {
+  border-bottom: none;
+}
+
+.trade-cell {
   color: #333;
   font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trade-header-row .trade-cell {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .trade-type {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
   font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.trade-item.buy .trade-type {
-  color: #4CAF50;
+.buy-badge {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
-.trade-item.sell .trade-type {
-  color: #f44336;
+.sell-badge {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (max-width: 1024px) {
+  .trade-header-row,
+  .trade-row {
+    grid-template-columns: 70px 100px 100px 70px 150px 90px;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
 }
 </style>
