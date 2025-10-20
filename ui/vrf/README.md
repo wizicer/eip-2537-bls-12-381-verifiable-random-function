@@ -1,42 +1,92 @@
-# vrf
+# Trade Book DApp
 
-This template should help get you started developing with Vue 3 in Vite.
+A decentralized application (DApp) built with Vue.js 3 and Ethereum smart contracts for submitting and tracking trades on the blockchain.
 
-## Recommended IDE Setup
+## Features
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- 🦊 **MetaMask Integration** - Connect your wallet to interact with the blockchain
+- 📝 **Trade Submission** - Submit buy/sell trades with price and volume
+- 📊 **Epoch-Based Grouping** - Trades are automatically grouped into epochs (5 blocks each)
+- 🔄 **Real-time Updates** - Automatically refreshes when new trades are submitted
+- 📱 **Responsive Design** - Works on desktop and mobile devices
 
-## Recommended Browser Setup
+## Tech Stack
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- **Frontend**: Vue.js 3, TypeScript, Pinia
+- **Blockchain**: Solidity, Hardhat, Ethers.js
+- **Build Tool**: Vite
 
-## Type Support for `.vue` Imports in TS
+## Quick Start
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+See [QUICKSTART.md](./QUICKSTART.md) for a step-by-step guide to get running in minutes.
 
-## Customize configuration
+## Detailed Setup
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+See [SETUP.md](./SETUP.md) for comprehensive setup instructions and troubleshooting.
 
-## Project Setup
+## Project Structure
 
-```sh
+```
+├── contracts/          # Solidity smart contracts
+│   └── TradeBook.sol
+├── scripts/           # Deployment scripts
+│   ├── deploy.ts
+│   └── deploy-and-save.ts
+├── src/
+│   ├── components/    # Vue components
+│   │   ├── TradeForm.vue
+│   │   └── TradeList.vue
+│   ├── stores/        # Pinia stores
+│   │   └── web3.ts
+│   ├── types/         # TypeScript type definitions
+│   ├── App.vue        # Main app component
+│   └── main.ts        # App entry point
+├── hardhat.config.ts  # Hardhat configuration
+└── package.json
+```
+
+## Available Scripts
+
+```bash
+# Install dependencies
 npm install
-```
 
-### Compile and Hot-Reload for Development
+# Compile smart contracts
+npm run compile
 
-```sh
+# Start local blockchain
+npm run node
+
+# Deploy contract to local network
+npm run deploy
+
+# Deploy and save contract address
+npm run deploy:save
+
+# Start development server
 npm run dev
-```
 
-### Type-Check, Compile and Minify for Production
-
-```sh
+# Build for production
 npm run build
 ```
+
+## Smart Contract
+
+The `TradeBook` contract provides:
+
+- `submitTrade(price, volume, tradeType)` - Submit a new trade
+- `getAllTrades()` - Get all trades
+- `getTrade(tradeId)` - Get a specific trade
+- `getTradeCount()` - Get total number of trades
+- `getTradesByEpoch(startBlock, endBlock)` - Get trades within a block range
+
+## Development Workflow
+
+1. **Terminal 1**: `npm run node` - Start local blockchain
+2. **Terminal 2**: `npm run deploy:save` - Deploy contract
+3. **Terminal 3**: `npm run dev` - Start UI
+4. Open browser, connect MetaMask, paste contract address, and start trading!
+
+## License
+
+MIT

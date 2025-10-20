@@ -28,3 +28,9 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Hardhat
+cache
+artifacts
+typechain-types
+contract-address.json
