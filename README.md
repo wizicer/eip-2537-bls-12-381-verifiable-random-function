@@ -70,25 +70,13 @@ flowchart LR
 
 * **前置要求**：Node 22+, npm, Git
 
-* **环境变量样例**：
-
-```bash
-# frontend/.env.local
-NEXT_PUBLIC_RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x...
-
-# backend/.env
-RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
-PRIVATE_KEY=0x...
-PORT=3001
-```
-
 * **一键启动（本地示例）**：
 
 ```bash
+cd ui/vrf
 npm install
 npm run dev
-# 打开 http://localhost:3000
+# 打开 http://localhost:5173
 ```
 
 ### 5) Demo 与关键用例 (Demo & Key Flows)
