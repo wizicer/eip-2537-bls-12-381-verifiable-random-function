@@ -31,24 +31,18 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
+      // Hardhat 3.x 版本强制要求 type，传统网络已被移除
+      // 只能在 EDR 模拟器和 HTTP 网络之间选择
       type: "edr-simulated",
       chainType: "l1",
       hardfork: "prague", // Enable Prague fork for BLS12381 precompiles
-    },
-    hardhatMainnet: {
-      type: "edr-simulated",
-      chainType: "l1",
-    },
-    hardhatOp: {
-      type: "edr-simulated",
-      chainType: "op",
-    },
-    sepolia: {
-      type: "http",
-      chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-    },
+    },      
+    // opSepolia: {
+    //   type: "http",
+    //   chainType: "op",
+    //   url: "https://sepolia.optimism.io",
+    //   accounts: [], // 需要时设置 PRIVATE_KEY 环境变量
+    // },
   },
 };
 

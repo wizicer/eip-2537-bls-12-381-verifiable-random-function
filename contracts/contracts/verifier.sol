@@ -14,17 +14,24 @@ contract EIP2537VrfStyleVerifier {
     address constant BLS12_G1MSM       = address(0x0c);
     address constant BLS12_MAP_FP_TO_G1= address(0x10);
 
+    // Gas costs for precompiles (per EIP-2537)
+    uint256 constant G1MSM_GAS = 50000; // For 2-term MSM, need sufficient gas
+    uint256 constant MAP_FP_TO_G1_GAS = 5500;
+
     // --- BLS12-381 constants (per spec) ---
     // Main subgroup order q
     uint256 constant Q =
         0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001;
 
-    // G1 generator (H1) coordinates from the spec (uncompressed 128 bytes: X(64) || Y(64), both big-endian).
-    // See EIP-2537 "Generators: H1" (we use H1 as the canonical G1 generator) .
-    bytes constant G1_GENERATOR = hex"000000000000000000000000000000000000000000000000000000000000000017f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac58000000000000000000000000000000000000000000000000000000000000000008b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3ed";
+    // G1 generator (BASE) from @noble/curves/bls12-381 in EIP-2537 format (128 bytes: X(64) || Y(64), both big-endian).
+    // This matches bls12_381.G1.ProjectivePoint.BASE used in JavaScript code.
+    // Format: [0x00...00(16) || x(48) || 0x00...00(16) || y(48)] = 128 bytes
+    bytes constant G1_GENERATOR = hex"0000000000000000000000000000000017f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb0000000000000000000000000000000008b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1";
 
     // --- Errors ---
     error PrecompileFailure();   // low-level call to precompile failed (bad encoding/out of subgroup, etc.)
+    error PrecompileG1MsmFailure();   // G1MSM precompile failed (bad encoding/out of subgroup, etc.)
+    error PrecompileMapToG1Failure();   // MAP_FP_TO_G1 precompile failed (bad encoding/out of subgroup, etc.)
     error InvalidPointLength();  // pk/preout not 128 bytes
     error InvalidScalar();       // c or s1 not in [0, Q) (optional check)
 
@@ -43,7 +50,7 @@ contract EIP2537VrfStyleVerifier {
         uint256 c,
         uint256 s1,
         bytes calldata preout
-    ) external view returns (bool ok, bytes32 out) {
+    ) external returns (bool ok, bytes32 out) {
         if (pk.length != 128 || preout.length != 128) revert InvalidPointLength();
 
         // Optionally bound scalars into [0, q). (If caller already reduces, this is a no-op.)
@@ -51,7 +58,7 @@ contract EIP2537VrfStyleVerifier {
 
         // 1) Compute H_G(in): hash-to-field (bytes -> Fp) then MAP_FP_TO_G1.
         //    We use a simple hash_to_field: fp = be64(0) || be32(keccak(in)) which is < p.
-        bytes memory hIn = _mapToG1(_hashToFp(inBlob)); // 128 bytes (G1 point)
+        bytes memory hIn = _mapToG1(inBlob); // 128 bytes (G1 point)
 
         // 2) R = s1*G + (q-c)*pk   (since -c*pk == (q-c)*pk mod q)
         bytes memory R = _g1Msm2(
@@ -97,52 +104,52 @@ contract EIP2537VrfStyleVerifier {
         }
     }
 
-    /// @dev MAP Fp -> G1 using the 0x10 precompile. Input: 64 bytes; Output: 128 bytes (G1 point).
-    function _mapToG1(bytes memory fp64) private view returns (bytes memory out128) {
-        if (fp64.length != 64) revert PrecompileFailure();
-        out128 = new bytes(128);
-        bool ok;
+    /// @dev Map bytes to G1 point using MAP_FP_TO_G1 precompile (matching vrf.ts H_G function).
+    ///      First hashes input bytes with keccak256, then converts to Fp element and maps to G1 point.
+    ///      Input: arbitrary bytes; Output: 128 bytes (G1 point in EIP-2537 format).
+    ///      Algorithm: data -> keccak256(data) -> Fp (64 bytes: [0x00...00(32) || hash(32)]) -> MAP_FP_TO_G1 -> G1 point
+    ///      NOTE: keccak256 outputs 32 bytes, which is guaranteed < p (381 bits), so no mod p needed.
+    function _mapToG1(bytes memory data) private returns (bytes memory out128) {
+        // First, hash input bytes with keccak256 (outputs 32 bytes)
+        bytes32 h = keccak256(data);
+        
+        // Convert to Fp element (64 bytes, big-endian)
+        // Format: [0x00...00(32) || keccak256(data)(32)] = 64 bytes
+        // This ensures the value < p (since keccak256 output is 32 bytes < 381 bits)
+        bytes memory fp64 = new bytes(64);
         assembly {
-            let fp64Ptr := add(fp64, 0x20)
-            let out128Ptr := add(out128, 0x20)
-            let success := staticcall(gas(), 0x10, fp64Ptr, 64, out128Ptr, 128)
-            ok := success
+            mstore(add(fp64, 64), h) // Write hash at tail (low 32 bytes) => big-endian 64 = 0x00..00 || h
         }
-        if (!ok) revert PrecompileFailure();
+        
+        // MAP_FP_TO_G1 -> G1 point
+        (bool ok, bytes memory result) = BLS12_MAP_FP_TO_G1.call{gas: MAP_FP_TO_G1_GAS}(fp64);
+        if (!ok) revert PrecompileMapToG1Failure();
+        if (result.length != 128) revert PrecompileMapToG1Failure();
+        out128 = result;
     }
 
     /// @dev Two-term G1 MSM: returns 128-byte point for (s1*P1 + s2*P2).
-    ///      Encodes as [P1(128) || s1(32) || P2(128) || s2(32)] and calls 0x0c.
+    ///      Encodes per EIP-2537: [P1(128) || s1(32) || P2(128) || s2(32)] and calls 0x0c.
+    ///      Format: For each pair, [point(128) || scalar(32)], concatenated.
+    ///      No pair count prefix - format determined by input length.
+    ///      Uses the same call syntax as BLS12381Test for consistency.
     function _g1Msm2(
         bytes memory P1, uint256 s1,
         bytes memory P2, uint256 s2
-    ) private view returns (bytes memory out128) {
+    ) private returns (bytes memory out128) {
         if (P1.length != 128 || P2.length != 128) revert InvalidPointLength();
 
-        bytes memory inBuf = new bytes(160 * 2); // two pairs
-        bytes memory s1be = _u256ToBe32(s1);
-        bytes memory s2be = _u256ToBe32(s2);
+        // EIP-2537 format: [P1(128) || s1(32) || P2(128) || s2(32)] = 320 bytes
+        // Use abi.encodePacked exactly like BLS12381Test (which works successfully)
+        // Convert uint256 to bytes32 for encoding
+        bytes memory input = abi.encodePacked(P1, bytes32(s1), P2, bytes32(s2));
 
-        // Pack input: [P1||s1||P2||s2]
-        assembly {
-            // copy P1
-            calldatacopy(0x00, 0, 0) // no-op; keep stack clean
-        }
-        _memcpy(inBuf, 0, P1, 0, 128);
-        _memcpy(inBuf, 128, s1be, 0, 32);
-        _memcpy(inBuf, 160, P2, 0, 128);
-        _memcpy(inBuf, 288, s2be, 0, 32);
-
-        out128 = new bytes(128);
-        bool ok;
-        assembly {
-            let inBufPtr := add(inBuf, 0x20)
-            let inBufLen := mload(inBuf)
-            let out128Ptr := add(out128, 0x20)
-            let success := staticcall(gas(), 0x0c, inBufPtr, inBufLen, out128Ptr, 128)
-            ok := success
-        }
-        if (!ok) revert PrecompileFailure();
+        // Use Solidity high-level call syntax exactly like BLS12381Test
+        // This matches: (success, result) = BLS12_G1MSM.call{gas: G1MSM_GAS}(input);
+        (bool ok, bytes memory result) = BLS12_G1MSM.call{gas: G1MSM_GAS}(input);
+        if (!ok || result.length != 128) revert PrecompileG1MsmFailure();
+        
+        out128 = result;
     }
 
     /// @dev Convert uint256 to 32-byte big-endian bytes.
