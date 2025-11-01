@@ -40,7 +40,8 @@ flowchart LR
 
 * **核心逻辑**:
 
-![](./formula.png)
+![](./formula-1.png)
+![](./formula-2.png)
 
 详细查看[vrf.pdf](./vrf_research/docs/vrf.pdf)
 

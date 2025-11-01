@@ -56,23 +56,23 @@
 \maketitle
 % \tableofcontents
 
-VRF(Verifiable Random Function) 可以理解为产生一个可以验证的随机数的函数，其输入是任意的输入，可以理解为随机种子，其输出为一个随机数和一个证明。对于一个用户，首先其有一个公私钥对，其可以通过自己的私钥生成一个随机数和证明，其他人拿着该用户的公钥和证明就可以验证该随机数确实是由该用户生成的。
+VRF(Verifiable Random Function) 可以理解为产生一个可以验证的随机数的函数，其输入是任意的输入，可以理解为随机种子，其输出为一个随机数和一个证明。对于一个用户，首先有一个公私钥对，其可以通过自己的私钥生成一个随机数和证明，其他人拿着该用户的公钥和证明就可以验证该随机数确实是由该用户生成的。
 
 本仓库代码中实现的 VRF 属于 EC-VRF，也就是基于椭圆曲线，其中曲线选取为 bls12-381。
 
 \section{VRF 计算}
 
-主要分为两个阶段，一个阶段是 Prover 用自己的私钥生成随机数以及证明，第二个阶段是 Verifier 对证明进行验证。
+主要分为两个阶段，第一个阶段是 Prover 用自己的私钥生成随机数以及证明，第二个阶段是 Verifier 对证明进行验证。
 
-\subsection{Porver 计算}
+\subsection{Prover 计算}
 
 \begin{itemize}
     \item 输入：$sk, pk, in$
 \end{itemize}
-其中 $sk$ 为进行签名和输出随机数的私钥，$in$ 为任意的输入。
+其中 $in$ 为任意的输入，$sk$ 为进行签名和输出随机数的私钥，$pk$ 为 $sk$ 对应的公钥，在椭圆曲线上，$pk = sk \cdot G$ ($G$ 为椭圆曲线群上的生成元)。
 
 \begin{enumerate}
-    \item 计算 \[preout = sk \cdot H_{\mathbb{G}}(in)\] 其中 $H_{\mathbb{G}}$ 是 hash to curve 操作。在具体实现过程中，这一步也可以改为计算 \[preout = sk \cdot H_{\mathbb{G}}(keccak256(in))\] 其中 $keccak256$ 为哈希函数。
+    \item 计算 \[preout = sk \cdot H_{\mathbb{G}}(in)\] 其中 $H_{\mathbb{G}}$ 是 hash to curve 操作。
     \item 在 $\mathbb{F}_p$ 中选取随机数 $r_1$。
     \item 计算 \[ R = r_1 \cdot \mathbf{G} \] \[R_m = r_1 \cdot H_{\mathbb{G}}(in)\]
     \item 计算 \[c = H_p(in, pk, preout, R, R_m)\] 其中 $H_p$ 是在有限域 $\mathbb{F}_p$ 上进行哈希，先进行哈希，再映射到有限域 $\mathbb{F}_p$ 内。
@@ -92,11 +92,21 @@ VRF(Verifiable Random Function) 可以理解为产生一个可以验证的随机
 \end{itemize}
 
 \begin{enumerate}
-    \item 计算 \[R = s_1 \cdot G - c \cdot pk\] \[R_m = s_1 \cdot  H_{\mathbb{G}}(in) - c \cdot preout\]
+    \item 计算 \[R = s_1 \cdot G - c \cdot pk\] \[R_m = s_1 \cdot  H_{\mathbb{G}}(in) - c \cdot preout\] 
     \item 判断 \[c \overset{?}{=} H_p(in, pk, preout, R, R_m)\]
     \item 上一步如果相等，计算 \[out = H(preout, in)\]并输出 $out$ ，否则输出 $false$ 。
 \end{enumerate}
 
 这一阶段输出的 $out$ 就可以作为 整个VRF 输出的随机数。
+
+
+\begin{thebibliography}{10}
+    \bibitem{cryptoeprint:2023/002}
+    Jeffrey Burdges, Oana Ciobotaru, Handan Kılınç Alper, Alistair Stewart, and Sergey Vasilyev.
+    \textit{Ring Verifiable Random Functions and Zero-Knowledge Continuations.}
+    Cryptology ePrint Archive, 2023.
+    \url{https://eprint.iacr.org/2023/002}
+    \bibitem{DeepSafe} \href{https://github.com/deepsafe/whitepaper/blob/main/DeepSafe_A_Cryptography_Random_Verification_Layer.pdf}{DeepSafe: A Cryptography Random Verification Layer.}
+\end{thebibliography}
 
 \end{document}
